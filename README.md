@@ -3,7 +3,12 @@
 Static, single-file calculator for Sri Lankan **Advance Personal Income Tax (APIT)**, the
 **EPF employee deduction (8%)** and monthly **take-home salary**.
 
-No build step, no dependencies — `index.html` is the whole app.
+No build step, no dependencies — `index.html` is the whole app. The only external request is
+the Outfit webfont from Google Fonts.
+
+Two-column layout (inputs and headline results on the left, slab table and breakdown on the
+right), collapsing to one column below 1000px. Light and dark themes follow the OS setting and
+can be toggled in the header; the choice is remembered in `localStorage`.
 
 ## Inputs
 

@@ -1,186 +1,321 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sri Lanka Personal Income Tax (APIT) Calculator</title>
 <meta name="description" content="Calculate Sri Lanka Advance Personal Income Tax (APIT), EPF deduction and monthly take-home salary.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  // Set the theme before first paint to avoid a flash.
+  (function () {
+    try {
+      var t = localStorage.getItem("theme");
+      if (t !== "light" && t !== "dark") {
+        t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      document.documentElement.className = t;
+    } catch (e) { /* keep the default light class */ }
+  })();
+</script>
 <style>
   :root{
-    --bg:#131722;
-    --card:#1b2130;
-    --panel:#212836;
-    --border:#2c3446;
-    --head:#39435a;
-    --text:#dbe1ec;
-    --muted:#8b95a8;
-    --accent:#b7e4c7;
-    --red:#f4574e;
-    --green:#4ade80;
-    --blue:#7dd3fc;
+    --background: oklch(0.9911 0 0);
+    --foreground: oklch(0.2046 0 0);
+    --card: oklch(0.9911 0 0);
+    --card-foreground: oklch(0.2046 0 0);
+    --primary: oklch(0.8348 0.1302 160.9080);
+    --primary-foreground: oklch(0.2626 0.0147 166.4589);
+    --secondary: oklch(0.9940 0 0);
+    --secondary-foreground: oklch(0.2046 0 0);
+    --muted: oklch(0.9461 0 0);
+    --muted-foreground: oklch(0.4386 0 0);
+    --accent: oklch(0.9461 0 0);
+    --accent-foreground: oklch(0.2435 0 0);
+    --destructive: oklch(0.5523 0.1927 32.7272);
+    --border: oklch(0.9037 0 0);
+    --input: oklch(0.9731 0 0);
+    --ring: oklch(0.8348 0.1302 160.9080);
+    --chart-2: oklch(0.6231 0.1880 259.8145);
+    --chart-5: oklch(0.6959 0.1491 162.4796);
+
+    /* semantic figures: tax / EPF / take-home */
+    --tax: var(--destructive);
+    --epf: var(--chart-2);
+    --net: var(--chart-5);
+
+    --font-sans: Outfit, ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+    --font-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --radius: 0.5rem;
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --shadow-xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.09);
+    --shadow-sm: 0px 1px 3px 0px hsl(0 0% 0% / 0.17), 0px 1px 2px -1px hsl(0 0% 0% / 0.17);
+    --shadow-md: 0px 1px 3px 0px hsl(0 0% 0% / 0.17), 0px 2px 4px -1px hsl(0 0% 0% / 0.17);
+    --tracking-normal: 0.025em;
+
+    color-scheme: light;
   }
+
+  .dark{
+    --background: oklch(0.1822 0 0);
+    --foreground: oklch(0.9288 0.0126 255.5078);
+    --card: oklch(0.2046 0 0);
+    --card-foreground: oklch(0.9288 0.0126 255.5078);
+    --primary: oklch(0.4365 0.1044 156.7556);
+    --primary-foreground: oklch(0.9213 0.0135 167.1556);
+    --secondary: oklch(0.2603 0 0);
+    --secondary-foreground: oklch(0.9851 0 0);
+    --muted: oklch(0.2393 0 0);
+    --muted-foreground: oklch(0.7122 0 0);
+    --accent: oklch(0.3132 0 0);
+    --accent-foreground: oklch(0.9851 0 0);
+    --destructive: oklch(0.3123 0.0852 29.7877);
+    --border: oklch(0.2809 0 0);
+    --input: oklch(0.2603 0 0);
+    --ring: oklch(0.8003 0.1821 151.7110);
+    --chart-2: oklch(0.7137 0.1434 254.6240);
+    --chart-5: oklch(0.7845 0.1325 181.9120);
+
+    /* the dark --destructive is a surface tone, too dark for text */
+    --tax: oklch(0.7048 0.1770 24.5000);
+
+    color-scheme: dark;
+  }
+
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{
-    background:var(--bg);
-    color:var(--text);
-    font-family:ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Courier New",monospace;
+    background:var(--background);
+    color:var(--foreground);
+    font-family:var(--font-sans);
     font-size:14px;
     line-height:1.5;
-    padding:24px 16px 64px;
+    letter-spacing:var(--tracking-normal);
+    padding:20px 16px 40px;
   }
-  .wrap{max-width:1100px;margin:0 auto}
+  .num{font-family:var(--font-mono);letter-spacing:0;font-variant-numeric:tabular-nums}
+
+  .wrap{max-width:1240px;margin:0 auto}
   .card{
     background:var(--card);
+    color:var(--card-foreground);
     border:1px solid var(--border);
-    border-radius:8px;
-    padding:28px;
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-sm);
+    padding:24px;
   }
-  h1{font-size:20px;margin:0 0 10px;letter-spacing:.2px}
-  .lede{color:var(--muted);margin:0 0 22px;font-size:13px}
+  .top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px}
+  h1{font-size:19px;font-weight:600;margin:0 0 6px;letter-spacing:calc(var(--tracking-normal) - 0.025em)}
+  .lede{color:var(--muted-foreground);margin:0;font-size:12.5px}
 
-  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:16px}
-  .field{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--panel)}
+  /* two-column shell */
+  .layout{display:grid;grid-template-columns:minmax(360px,400px) 1fr;gap:20px;align-items:start}
+  .col{display:flex;flex-direction:column;gap:18px;min-width:0}
+
+  .block{border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;background:var(--card)}
+  .block > h2{
+    font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted-foreground);
+    margin:0;font-weight:600;padding:10px 14px;background:var(--muted);
+    border-bottom:1px solid var(--border);
+  }
+  .block .body{padding:16px 14px}
+
+  /* inputs */
+  .fields{display:flex;flex-direction:column;gap:10px}
+  .field{display:flex;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--input)}
   .field label{
-    flex:0 0 auto;min-width:215px;display:flex;align-items:center;
-    padding:12px 14px;background:#232b3b;color:var(--muted);font-size:12.5px;
-    border-right:1px solid var(--border);
+    flex:0 0 165px;display:flex;align-items:center;
+    padding:10px 12px;background:var(--muted);color:var(--muted-foreground);font-size:12px;
+    border-right:1px solid var(--border);line-height:1.3;
   }
   .field input{
-    flex:1 1 auto;min-width:0;background:transparent;border:0;outline:none;
-    color:var(--text);font:inherit;font-size:15px;padding:12px 14px;
+    flex:1 1 auto;min-width:0;width:100%;background:transparent;border:0;outline:none;
+    color:var(--foreground);font-family:var(--font-mono);font-size:15px;padding:10px 12px;
+    font-variant-numeric:tabular-nums;
   }
-  .field input[readonly]{color:var(--muted);cursor:default}
-  .field:focus-within{border-color:#4a5670}
+  .field input[readonly]{color:var(--muted-foreground);cursor:default;font-size:12.5px}
+  .field:focus-within{
+    border-color:var(--ring);
+    box-shadow:0 0 0 3px color-mix(in oklch, var(--ring) 35%, transparent);
+  }
   input[type=number]::-webkit-outer-spin-button,
   input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   input[type=number]{-moz-appearance:textfield}
 
-  .opts{display:flex;flex-wrap:wrap;gap:18px;margin:4px 0 18px;color:var(--muted);font-size:12.5px}
+  .opts{display:flex;flex-direction:column;gap:9px;margin:14px 0;color:var(--muted-foreground);font-size:12px}
   .opts label{display:flex;align-items:center;gap:8px;cursor:pointer}
-  .opts input{accent-color:var(--accent);width:15px;height:15px;cursor:pointer}
+  .opts input{accent-color:var(--ring);width:15px;height:15px;flex:0 0 auto;cursor:pointer}
 
-  .actions{display:flex;gap:12px;margin-bottom:20px}
+  .actions{display:flex;gap:10px}
   button{
-    flex:1;background:var(--accent);color:#12331f;border:0;border-radius:6px;
-    font:inherit;font-size:15px;font-weight:700;padding:13px 18px;cursor:pointer;
+    font-family:inherit;font-size:14px;letter-spacing:var(--tracking-normal);
+    border-radius:var(--radius-sm);cursor:pointer;
   }
-  button:hover{filter:brightness(1.05)}
-  button.ghost{flex:0 0 auto;background:transparent;color:var(--muted);border:1px solid var(--border);font-weight:400}
+  #calc{
+    flex:1;background:var(--primary);color:var(--primary-foreground);border:1px solid transparent;
+    font-weight:600;padding:11px 14px;box-shadow:var(--shadow-xs);
+  }
+  #calc:hover{filter:brightness(1.05)}
+  .ghost{
+    flex:0 0 auto;background:var(--secondary);color:var(--secondary-foreground);
+    border:1px solid var(--border);font-weight:400;padding:11px 14px;
+  }
+  .ghost:hover{background:var(--accent);color:var(--accent-foreground)}
+  #theme{
+    flex:0 0 auto;background:var(--secondary);color:var(--muted-foreground);
+    border:1px solid var(--border);padding:8px 12px;font-size:12px;white-space:nowrap;
+  }
+  #theme:hover{background:var(--accent);color:var(--accent-foreground)}
+  .err{color:var(--tax);font-size:12px;min-height:18px;margin-top:10px}
 
-  .tblwrap{overflow-x:auto;border:1px solid var(--border);border-radius:6px}
+  /* results summary */
+  .stats{display:flex;flex-direction:column}
+  .stat{padding:13px 14px;border-bottom:1px solid var(--border)}
+  .stat:last-child{border-bottom:0}
+  .stat .k{font-size:12px;font-weight:600;margin-bottom:2px}
+  .stat .v{font-family:var(--font-mono);font-size:25px;font-weight:700;letter-spacing:-0.02em;line-height:1.25;font-variant-numeric:tabular-nums}
+  .stat .m{color:var(--muted-foreground);font-size:11px;margin-top:3px}
+  .stat.tax .k,.stat.tax .v{color:var(--tax)}
+  .stat.epf .k,.stat.epf .v{color:var(--epf)}
+  .stat.net .k,.stat.net .v{color:var(--net)}
+
+  /* slab table */
+  .tblwrap{overflow-x:auto}
   table{width:100%;border-collapse:collapse}
   thead th{
-    background:var(--head);color:#cfd7e6;text-align:left;font-size:11.5px;
-    letter-spacing:.6px;text-transform:uppercase;font-weight:600;padding:9px 14px;
+    background:var(--muted);color:var(--muted-foreground);text-align:left;font-size:11px;
+    letter-spacing:0.08em;text-transform:uppercase;font-weight:600;padding:9px 14px;
+    border-bottom:1px solid var(--border);
   }
-  tbody td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13.5px;white-space:nowrap}
+  tbody td{
+    padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;white-space:nowrap;
+    font-family:var(--font-mono);letter-spacing:0;font-variant-numeric:tabular-nums;
+  }
   tbody tr:last-child td{border-bottom:0}
-  tbody tr.dim td{color:var(--muted)}
+  tbody tr.dim td{color:var(--muted-foreground);opacity:.65}
+  th.r,td.r{text-align:right}
 
-  .summary{display:flex;justify-content:flex-end;padding:22px 4px 0}
-  .sumgrid{display:grid;grid-template-columns:auto auto;gap:4px 26px;align-items:baseline;text-align:right}
-  .sumgrid .lbl{font-size:12.5px;font-weight:700}
-  .sumgrid .big{font-size:26px;font-weight:700;letter-spacing:-.5px}
-  .lbl.red,.big.red{color:var(--red)}
-  .lbl.green,.big.green{color:var(--green)}
-  .lbl.blue,.big.blue{color:var(--blue)}
-  .rate{color:var(--muted);font-size:15px}
-  .rate small{display:block;font-size:11px;line-height:1.3}
-  .sep{grid-column:1 / -1;border-top:1px solid var(--border);margin:10px 0 6px}
+  /* breakdown */
+  .brow{display:flex;justify-content:space-between;gap:16px;padding:8px 14px;border-bottom:1px solid var(--border);font-size:13px}
+  .brow:last-child{border-bottom:0}
+  .brow span:first-child{color:var(--muted-foreground)}
+  .brow span:last-child{white-space:nowrap;font-family:var(--font-mono);letter-spacing:0;font-variant-numeric:tabular-nums}
+  .brow.total{font-weight:600;background:var(--muted)}
+  .brow.total span:first-child{color:var(--foreground)}
+  .neg{color:var(--tax)}
 
-  .breakdown{margin-top:26px;border-top:1px solid var(--border);padding-top:18px}
-  .breakdown h2{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0 0 12px;font-weight:600}
-  .brow{display:flex;justify-content:space-between;gap:16px;padding:7px 0;border-bottom:1px dashed #2a3242;font-size:13px}
-  .brow span:first-child{color:var(--muted)}
-  .brow.total{font-weight:700;border-bottom:0;border-top:1px solid var(--border);margin-top:6px;padding-top:11px}
-  .brow.total span:first-child{color:var(--text)}
-  .neg{color:var(--red)}
-  .note{color:var(--muted);font-size:11.5px;margin-top:24px;line-height:1.75}
-  .note b{color:#aab4c6;font-weight:600}
-  .err{color:var(--red);font-size:12.5px;min-height:20px;margin:-8px 0 8px}
+  .note{color:var(--muted-foreground);font-size:11.5px;margin:20px 0 0;line-height:1.75}
+  .note b{color:var(--foreground);font-weight:600}
 
-  @media (max-width:820px){
-    .grid{grid-template-columns:1fr}
-    .field label{min-width:150px;font-size:11.5px}
-    body{padding:14px 10px 48px}
-    .card{padding:18px}
-    .sumgrid .big{font-size:22px}
+  @media (max-width:1000px){
+    .layout{grid-template-columns:1fr}
+  }
+  @media (max-width:560px){
+    body{padding:12px 10px 32px}
+    .card{padding:16px}
+    .top{flex-direction:column;gap:12px}
+    .field label{flex:0 0 135px;font-size:11px}
+    .stat .v{font-size:21px}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="card">
-    <h1>Calculate Your Advance Personal Income Tax (APIT)</h1>
-    <p class="lede">Enter your monthly employment income to calculate the Advance Personal Income Tax, the EPF deduction and your final take-home salary.</p>
-
-    <div class="grid">
-      <div class="field">
-        <label for="salary">Monthly basic salary Rs.</label>
-        <input id="salary" type="number" min="0" step="any" placeholder="0.00" value="500000" inputmode="decimal">
+    <div class="top">
+      <div>
+        <h1>Calculate Your Advance Personal Income Tax (APIT)</h1>
+        <p class="lede">Enter your monthly employment income to calculate the Advance Personal Income Tax, the EPF deduction and your final take-home salary.</p>
       </div>
-      <div class="field">
-        <label for="allowances">Cash allowances Rs.</label>
-        <input id="allowances" type="number" min="0" step="any" placeholder="0.00" value="0" inputmode="decimal">
-      </div>
-      <div class="field">
-        <label for="other">Other taxable income Rs.</label>
-        <input id="other" type="number" min="0" step="any" placeholder="0.00" value="0" inputmode="decimal">
-      </div>
-      <div class="field">
-        <label>Tax table</label>
-        <input type="text" value="2025/26 (from 01 Apr 2025)" readonly tabindex="-1">
-      </div>
+      <button id="theme" type="button" title="Switch between light and dark">&#9789; Dark</button>
     </div>
 
-    <div class="opts">
-      <label><input type="checkbox" id="epfOn" checked> Deduct EPF employee contribution (8%)</label>
-      <label><input type="checkbox" id="epfAllow"> Apply EPF on allowances too</label>
-      <label><input type="checkbox" id="otherCash"> Other income is paid in cash</label>
-    </div>
+    <div class="layout">
 
-    <div class="actions">
-      <button id="calc" type="button">&#9636; Calculate</button>
-      <button id="reset" class="ghost" type="button">Reset</button>
-    </div>
+      <!-- left column: inputs + headline results -->
+      <div class="col">
+        <div class="block">
+          <h2>Monthly income</h2>
+          <div class="body">
+            <div class="fields">
+              <div class="field">
+                <label for="salary">Basic salary Rs.</label>
+                <input id="salary" type="number" min="0" step="any" placeholder="0.00" value="0" inputmode="decimal" autofocus>
+              </div>
+              <div class="field">
+                <label for="allowances">Cash allowances Rs.</label>
+                <input id="allowances" type="number" min="0" step="any" placeholder="0.00" value="0" inputmode="decimal">
+              </div>
+              <div class="field">
+                <label for="other">Other taxable income Rs.</label>
+                <input id="other" type="number" min="0" step="any" placeholder="0.00" value="0" inputmode="decimal">
+              </div>
+              <div class="field">
+                <label>Tax table</label>
+                <input type="text" value="2025/26 (from 01 Apr 2025)" readonly tabindex="-1">
+              </div>
+            </div>
 
-    <div class="err" id="err"></div>
+            <div class="opts">
+              <label><input type="checkbox" id="epfOn" checked> Deduct EPF employee contribution (8%)</label>
+              <label><input type="checkbox" id="epfAllow"> Apply EPF on allowances too</label>
+              <label><input type="checkbox" id="otherCash"> Other income is paid in cash</label>
+            </div>
 
-    <div class="tblwrap">
-      <table>
-        <thead>
-          <tr><th>Tax slab</th><th>Rate (%)</th><th>Tax</th></tr>
-        </thead>
-        <tbody id="slabs"></tbody>
-      </table>
-    </div>
+            <div class="actions">
+              <button id="calc" type="button">Calculate</button>
+              <button id="reset" class="ghost" type="button">Reset</button>
+            </div>
+            <div class="err" id="err"></div>
+          </div>
+        </div>
 
-    <div class="summary">
-      <div class="sumgrid">
-        <div class="lbl red">Total tax payable</div><div></div>
-        <div class="big red" id="totalTax">Rs.0.00</div>
-        <div class="rate"><span id="effRate">(0.00%)</span><small>Effective tax rate</small></div>
-        <div></div>
-        <div class="rate"><span id="margRate">(0.00%)</span><small>Marginal tax rate</small></div>
-
-        <div class="sep"></div>
-
-        <div class="lbl blue">EPF employee deduction</div><div></div>
-        <div class="big blue" id="epfAmt">Rs.0.00</div>
-        <div class="rate"><span id="epfBaseTxt">on Rs.0.00</span><small>Contribution base (8%)</small></div>
-
-        <div class="sep"></div>
-
-        <div class="lbl green">Salary after tax &amp; EPF</div><div></div>
-        <div class="big green" id="netPay">Rs.0.00</div>
-        <div class="rate"><span id="netPct">(0.00%)</span><small>of gross cash income</small></div>
+        <div class="block">
+          <h2>Result</h2>
+          <div class="stats">
+            <div class="stat tax">
+              <div class="k">Total tax payable</div>
+              <div class="v" id="totalTax">Rs.0.00</div>
+              <div class="m"><span class="num" id="effRate">0.00%</span> effective &middot; <span class="num" id="margRate">0.00%</span> marginal</div>
+            </div>
+            <div class="stat epf">
+              <div class="k">EPF employee deduction</div>
+              <div class="v" id="epfAmt">Rs.0.00</div>
+              <div class="m">8% on <span class="num" id="epfBaseTxt">Rs.0.00</span></div>
+            </div>
+            <div class="stat net">
+              <div class="k">Salary after tax &amp; EPF</div>
+              <div class="v" id="netPay">Rs.0.00</div>
+              <div class="m"><span class="num" id="netPct">0.00%</span> of gross cash income</div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div class="breakdown">
-      <h2>Monthly breakdown</h2>
-      <div id="bd"></div>
+      <!-- right column: slabs + breakdown -->
+      <div class="col">
+        <div class="block">
+          <h2>Tax slabs</h2>
+          <div class="tblwrap">
+            <table>
+              <thead>
+                <tr><th>Tax slab</th><th class="r">Rate (%)</th><th class="r">Tax</th></tr>
+              </thead>
+              <tbody id="slabs"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="block">
+          <h2>Monthly breakdown</h2>
+          <div id="bd"></div>
+        </div>
+      </div>
+
     </div>
 
     <p class="note">
@@ -219,7 +354,7 @@
   function moneySp(n) {
     return "Rs. " + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
-  function pct(n) { return "(" + (n * 100).toFixed(2) + "%)"; }
+  function pct(n) { return (n * 100).toFixed(2) + "%"; }
   function num(id) {
     var v = parseFloat($(id).value);
     return isFinite(v) && v > 0 ? v : 0;
@@ -234,7 +369,6 @@
       var tax = Math.max(0, Math.min(income, upper) - lower) * BANDS[i].rate;
       if (reached) { total += tax; marginal = BANDS[i].rate; }
       rows.push({ from: lower, to: upper, rate: BANDS[i].rate, tax: tax, reached: reached });
-      if (income <= upper) break;
       lower = upper;
     }
     return { rows: rows, total: total, marginal: marginal };
@@ -251,8 +385,8 @@
 
       html += "<tr class='" + (r.reached ? "" : "dim") + "'>" +
         "<td>" + moneySp(r.from) + " &ndash; " + to + "</td>" +
-        "<td>" + (r.rate * 100).toFixed(0) + "%</td>" +
-        "<td>" + moneySp(r.tax) + "</td>" +
+        "<td class='r'>" + (r.rate * 100).toFixed(0) + "%</td>" +
+        "<td class='r'>" + moneySp(r.tax) + "</td>" +
         "</tr>";
     }
     $("slabs").innerHTML = html;
@@ -286,7 +420,7 @@
     $("effRate").textContent = pct(taxable > 0 ? res.total / taxable : 0);
     $("margRate").textContent = pct(res.marginal);
     $("epfAmt").textContent = money(epf);
-    $("epfBaseTxt").textContent = "on " + money(epfBase);
+    $("epfBaseTxt").textContent = money(epfBase);
     $("netPay").textContent = money(net);
     $("netPct").textContent = pct(cashIncome > 0 ? net / cashIncome : 0);
 
@@ -315,15 +449,28 @@
   });
   $("calc").addEventListener("click", calculate);
   $("reset").addEventListener("click", function () {
-    $("salary").value = "";
-    $("allowances").value = "";
-    $("other").value = "";
+    $("salary").value = "0";
+    $("allowances").value = "0";
+    $("other").value = "0";
     $("epfOn").checked = true;
     $("epfAllow").checked = false;
     $("otherCash").checked = false;
     calculate();
     $("salary").focus();
   });
+
+  // theme toggle
+  function paintThemeButton() {
+    var dark = document.documentElement.classList.contains("dark");
+    $("theme").innerHTML = dark ? "☼ Light" : "☽ Dark";
+  }
+  $("theme").addEventListener("click", function () {
+    var dark = document.documentElement.classList.toggle("dark");
+    document.documentElement.classList.toggle("light", !dark);
+    try { localStorage.setItem("theme", dark ? "dark" : "light"); } catch (e) { /* ignore */ }
+    paintThemeButton();
+  });
+  paintThemeButton();
 
   calculate();
 })();
